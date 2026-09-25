@@ -12,16 +12,17 @@
 <div id="app"></div>
 <script>
 const FOODS = [
-  {name:"صدر دجاج",cal:165,p:31,c:0,f:3.6,gi:0},
-  {name:"أرز أبيض",cal:130,p:2.4,c:28,f:0.2,gi:72},
-  {name:"بيض",cal:143,p:12.5,c:1.1,f:9.5,gi:0},
-  {name:"شوفان",cal:389,p:16.9,c:66,f:6.9,gi:55},
-  {name:"تونة",cal:116,p:25.5,c:0,f:0.8,gi:0},
-  {name:"موز",cal:89,p:1.1,c:23,f:0.3,gi:51},
+  {name:"صدر دجاج",cal:165,p:31,c:0,f:3.6},
+  {name:"ارز ابيض",cal:130,p:2.4,c:28,f:0.2},
+  {name:"بيض",cal:143,p:12.5,c:1.1,f:9.5},
+  {name:"شوفان",cal:389,p:16.9,c:66,f:6.9},
+  {name:"تونة",cal:116,p:25.5,c:0,f:0.8},
+  {name:"موز",cal:89,p:1.1,c:23,f:0.3}
 ];
 let profile = JSON.parse(localStorage.getItem(\'rashik_profile\')||\'null\');
 let logs = JSON.parse(localStorage.getItem(\'rashik_logs\')||\'{"water":0,"steps":0,"meals":{"breakfast":[],"lunch":[],"dinner":[],"snacks":[]}}\');
 let activeMeal = \'breakfast\';
+let tmpGender = \'male\';
 const labels = {breakfast:\'الإفطار\', lunch:\'الغداء\', dinner:\'العشاء\', snacks:\'وجبات خفيفة\'};
 
 function save(){ localStorage.setItem(\'rashik_logs\', JSON.stringify(logs)); render(); }
@@ -39,20 +40,22 @@ function render(){
   const t = getTargets();
   if(!profile){
     document.getElementById(\'app\').innerHTML = `
-    <div class="min-h-screen flex items-center justify-center p-4">
-      <div class="bg-white rounded-[32px] p-6 w-full max-w-md shadow-sm text-center">
-        <h1 class="text-3xl font-black">مرحباً في رَشِيقْ</h1><p class="text-gray-500 text-sm mb-6">معالج الإعداد الأيضي</p>
-        <div class="space-y-3 text-right">
-          <div class="grid grid-cols-2 gap-2"><button onclick="setTmp(\'gender\',\'male\')" id="b-male" class="p-3 rounded-2xl font-bold bg-gray-900 text-white">ذكر</button><button onclick="setTmp(\'gender\',\'female\')" id="b-female" class="p-3 rounded-2xl font-bold bg-[#FFF9F0]">أنثى</button></div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="bg-[#FFF9F0] p-3 rounded-2xl text-center"><p class="text-xs">العمر</p><input id="age" type="number" value="25" class="w-full bg-transparent text-center font-black text-lg outline-none"></div>
-            <div class="bg-[#FFF9F0] p-3 rounded-2xl text-center"><p class="text-xs">الطول</p><input id="height" type="number" value="175" class="w-full bg-transparent text-center font-black text-lg outline-none"></div>
-            <div class="bg-[#FFF9F0] p-3 rounded-2xl text-center"><p class="text-xs">الوزن</p><input id="weight" type="number" value="75" class="w-full bg-transparent text-center font-black text-lg outline-none"></div>
-          </div>
-          <select id="activity" class="w-full bg-[#FFF9F0] p-3 rounded-2xl"><option value="1.2">خامل</option><option value="1.375">نشاط خفيف</option><option value="1.55" selected>نشاط متوسط</option><option value="1.725">نشط جداً</option></select>
-          <select id="goal" class="w-full bg-[#FFF9F0] p-3 rounded-2xl"><option value="deficit">خسارة دهون</option><option value="maintenance" selected>تثبيت الوزن</option><option value="bulk">تضخيم</option></select>
-          <button onclick="start()" class="w-full bg-emerald-500 text-white py-4 rounded-full font-bold text-lg">ابدأ رحلتك الآن →</button>
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:white;border-radius:32px;padding:24px;width:100%;max-width:400px;text-align:center">
+        <h1 style="font-size:28px;font-weight:900">مرحبا في رشيق</h1>
+        <p style="color:gray;font-size:13px;margin-bottom:16px">معالج الاعداد الايضي</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <button onclick="setGender(\'male\')" id="b-male" style="padding:12px;border-radius:16px;font-weight:bold;background:#111;color:white">ذكر</button>
+          <button onclick="setGender(\'female\')" id="b-female" style="padding:12px;border-radius:16px;font-weight:bold;background:#FFF9F0">انثى</button>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:#FFF9F0;padding:10px;border-radius:16px"><div style="font-size:11px">العمر</div><input id="age" type="number" value="25" style="width:100%;text-align:center;font-weight:900;background:transparent;outline:none"></div>
+          <div style="background:#FFF9F0;padding:10px;border-radius:16px"><div style="font-size:11px">الطول</div><input id="height" type="number" value="175" style="width:100%;text-align:center;font-weight:900;background:transparent;outline:none"></div>
+          <div style="background:#FFF9F0;padding:10px;border-radius:16px"><div style="font-size:11px">الوزن</div><input id="weight" type="number" value="75" style="width:100%;text-align:center;font-weight:900;background:transparent;outline:none"></div>
+        </div>
+        <select id="activity" style="width:100%;background:#FFF9F0;padding:12px;border-radius:16px;margin-bottom:8px"><option value="1.2">خامل</option><option value="1.375">نشاط خفيف</option><option value="1.55" selected>نشاط متوسط</option><option value="1.725">نشط جدا</option></select>
+        <select id="goal" style="width:100%;background:#FFF9F0;padding:12px;border-radius:16px;margin-bottom:12px"><option value="deficit">خسارة دهون</option><option value="maintenance" selected>تثبيت الوزن</option><option value="bulk">تضخيم</option></select>
+        <button onclick="start()" style="width:100%;background:#10B981;color:white;padding:16px;border-radius:999px;font-weight:bold;font-size:18px">ابدأ رحلتك الآن</button>
       </div>
     </div>`;
     return;
@@ -60,55 +63,51 @@ function render(){
   let all = [...logs.meals.breakfast, ...logs.meals.lunch, ...logs.meals.dinner, ...logs.meals.snacks];
   let totals = all.reduce((a,b)=>({cal:a.cal+b.cal, p:a.p+b.p, c:a.c+b.c, f:a.f+b.f}),{cal:0,p:0,c:0,f:0});
   let perc = Math.min(totals.cal/t.cal*100,100);
+  let mealsHtml = logs.meals[activeMeal].length===0 ? \'<p style="text-align:center;color:#aaa;padding:20px">لا يوجد مكونات</p>\' : logs.meals[activeMeal].map((f,i)=> `<div style="display:flex;align-items:center;gap:12px;background:#FFF9F0;padding:12px;border-radius:20px;margin-bottom:8px"><div style="width:40px;height:40px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center">🍽️</div><div style="flex:1;text-align:right"><div style="font-weight:bold;font-size:14px">${f.name}</div><div style="font-size:12px;color:gray">${f.cal} سعرة</div></div><button onclick="removeFood(${i})" style="color:#fb7185">✕</button></div>`).join(\'\');
+  let tabs = Object.keys(labels).map(k=> `<button onclick="activeMeal=\'${k}\';render()" style="padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;white-space:nowrap;${activeMeal===k?\'background:#111;color:white\':\'background:#FFF9F0\'}">${labels[k]}</button>`).join(\'\');
   document.getElementById(\'app\').innerHTML = `
-  <div class="bg-white/80 sticky top-0 border-b p-4 flex justify-between items-center max-w-[480px] mx-auto"><h1 class="font-black text-xl">رَشِيقْ <span class="text-emerald-500 text-xs">RASHIK</span></h1><span class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">● يعمل</span></div>
-  <div class="max-w-[480px] mx-auto p-4 space-y-4 pb-20">
-    <div class="bg-white p-5 rounded-[20px] shadow-sm flex items-center gap-5">
-      <div class="relative w-28 h-28 shrink-0">
-        <svg class="w-28 h-28 -rotate-90"><circle cx="56" cy="56" r="48" stroke="#FFF1E0" stroke-width="10" fill="none"/><circle cx="56" cy="56" r="48" stroke="#10B981" stroke-width="10" fill="none" stroke-dasharray="${2*Math.PI*48}" stroke-dashoffset="${2*Math.PI*48*(1-perc/100)}" stroke-linecap="round"/></svg>
-        <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-black">${totals.cal}</span><span class="text-xs text-gray-500">/ ${t.cal}</span></div>
+  <div style="background:white;padding:16px;display:flex;justify-content:space-between;align-items:center;max-width:480px;margin:auto;border-bottom:1px solid #eee"><b>رشيق RASHIK</b><span style="font-size:11px;background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:999px">● يعمل</span></div>
+  <div style="max-width:480px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:16px;padding-bottom:80px">
+    <div style="background:white;padding:20px;border-radius:20px;display:flex;align-items:center;gap:20px">
+      <div style="position:relative;width:112px;height:112px;flex-shrink:0">
+        <svg width="112" height="112" style="transform:rotate(-90deg)"><circle cx="56" cy="56" r="48" stroke="#FFF1E0" stroke-width="10" fill="none"/><circle cx="56" cy="56" r="48" stroke="#10B981" stroke-width="10" fill="none" stroke-dasharray="${2*Math.PI*48}" stroke-dashoffset="${2*Math.PI*48*(1-perc/100)}" stroke-linecap="round"/></svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:22px;font-weight:900">${totals.cal}</span><span style="font-size:11px;color:gray">/ ${t.cal}</span></div>
       </div>
-      <div class="flex-1 space-y-2 text-xs">
-        <div>بروتين ${totals.p.toFixed(0)}/${t.p}g <div class="h-2 bg-gray-100 rounded-full"><div class="h-2 bg-sky-500 rounded-full" style="width:${Math.min(totals.p/t.p*100,100)}%"></div></div></div>
-        <div>كارب ${totals.c.toFixed(0)}/${t.c}g <div class="h-2 bg-gray-100 rounded-full"><div class="h-2 bg-orange-400 rounded-full" style="width:${Math.min(totals.c/t.c*100,100)}%"></div></div></div>
-        <div>دهون ${totals.f.toFixed(0)}/${t.f}g <div class="h-2 bg-gray-100 rounded-full"><div class="h-2 bg-rose-400 rounded-full" style="width:${Math.min(totals.f/t.f*100,100)}%"></div></div></div>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-sky-500 text-white p-4 rounded-[20px]"><p class="text-sm">المياه</p><p class="text-xl font-bold">${(logs.water/1000).toFixed(1)} / 2.5 لتر</p><button onclick="logs.water+=250;save()" class="mt-3 bg-white text-sky-600 rounded-full px-4 py-1 text-sm font-bold w-full">+ 250 مل</button></div>
-      <div class="bg-orange-400 text-white p-4 rounded-[20px]"><p class="text-sm">الخطوات</p><p class="text-xl font-bold">${logs.steps} / 10000</p><button onclick="logs.steps+=500;save()" class="mt-3 bg-white text-orange-500 rounded-full px-4 py-1 text-sm font-bold w-full">+ 500 خطوة</button></div>
-    </div>
-    <div class="bg-white rounded-[20px] shadow-sm overflow-hidden">
-      <div class="h-32 bg-gradient-to-br from-orange-100 to-emerald-50 flex items-end p-4"><h2 class="text-2xl font-black bg-white/80 px-4 py-2 rounded-2xl">${labels[activeMeal]}</h2></div>
-      <div class="flex gap-2 p-3 overflow-x-auto">${Object.keys(labels).map(k=>`<button onclick="activeMeal=\'${k}\';render()" class="${activeMeal===k?\'bg-gray-900 text-white\':\'bg-[#FFF9F0]\'} px-5 py-2 rounded-full text-sm whitespace-nowrap font-bold">${labels[k]}</button>`).join(\'\')}</div>
-      <div class="px-4 pb-4">
-        <div class="flex justify-between items-center mb-3"><h3 class="font-bold">المكونات • ${logs.meals[activeMeal].length}</h3><button onclick="showAdd()" class="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold">+ إضافة</button></div>
-        <div class="space-y-2">${logs.meals[activeMeal].length===0?\'<p class="text-center text-gray-400 py-6">لا يوجد مكونات</p>\': logs.meals[activeMeal].map((f,i)=>`<div class="flex items-center gap-3 bg-[#FFF9F0] p-3 rounded-[20px]"><div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">🍽️</div><div class="flex-1"><p class="font-bold text-sm">${f.name}</p><p class="text-xs text-gray-500">${f.cal} سعرة</p></div><button onclick="logs.meals[\'${activeMeal}\'].splice(${i},1);save()" class="text-rose-400">✕</button></div>`).join(\'\')}</div>
+      <div style="flex:1;font-size:12px;display:flex;flex-direction:column;gap:8px">
+        <div>بروتين ${totals.p.toFixed(0)}/${t.p}g <div style="height:8px;background:#f3f4f6;border-radius:999px"><div style="height:8px;background:#0ea5e9;border-radius:999px;width:${Math.min(totals.p/t.p*100,100)}%"></div></div></div>
+        <div>كارب ${totals.c.toFixed(0)}/${t.c}g <div style="height:8px;background:#f3f4f6;border-radius:999px"><div style="height:8px;background:#f97316;border-radius:999px;width:${Math.min(totals.c/t.c*100,100)}%"></div></div></div>
+        <div>دهون ${totals.f.toFixed(0)}/${t.f}g <div style="height:8px;background:#f3f4f6;border-radius:999px"><div style="height:8px;background:#ec4899;border-radius:999px;width:${Math.min(totals.f/t.f*100,100)}%"></div></div></div>
       </div>
     </div>
-    <button onclick="localStorage.clear();location.reload()" class="w-full text-xs text-gray-400 py-4">إعادة تعيين</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:#0ea5e9;color:white;padding:16px;border-radius:20px"><div style="font-size:13px">المياه</div><div style="font-size:18px;font-weight:bold">${(logs.water/1000).toFixed(1)} / 2.5 لتر</div><button onclick="logs.water+=250;save()" style="margin-top:10px;background:white;color:#0ea5e9;width:100%;padding:6px;border-radius:999px;font-weight:bold">+ 250 مل</button></div>
+      <div style="background:#f97316;color:white;padding:16px;border-radius:20px"><div style="font-size:13px">الخطوات</div><div style="font-size:18px;font-weight:bold">${logs.steps} / 10000</div><button onclick="logs.steps+=500;save()" style="margin-top:10px;background:white;color:#f97316;width:100%;padding:6px;border-radius:999px;font-weight:bold">+ 500 خطوة</button></div>
+    </div>
+    <div style="background:white;border-radius:20px;overflow:hidden">
+      <div style="height:100px;background:linear-gradient(to bottom right,#ffedd5,#ecfdf5);display:flex;align-items:end;padding:16px"><h2 style="font-size:22px;font-weight:900;background:rgba(255,255,255,0.8);padding:6px 14px;border-radius:16px">${labels[activeMeal]}</h2></div>
+      <div style="display:flex;gap:8px;padding:12px;overflow:auto">${tabs}</div>
+      <div style="padding:0 16px 16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>المكونات • ${logs.meals[activeMeal].length}</b><button onclick="showAdd()" style="background:#10B981;color:white;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:bold">+ إضافة</button></div>${mealsHtml}</div>
+    </div>
+    <button onclick="localStorage.clear();location.reload()" style="width:100%;font-size:11px;color:#aaa;padding:10px">إعادة تعيين</button>
   </div>
-  <div id="modal" class="hidden fixed inset-0 bg-black/40 flex items-end justify-center z-50"><div class="bg-white w-full max-w-[480px] rounded-t-[32px] p-4 max-h-[70vh] overflow-auto"><input id="search" oninput="filterFoods()" placeholder="ابحث..." class="w-full bg-[#FFF9F0] rounded-full px-4 py-3 outline-none mb-3"><div id="foodList" class="space-y-2"></div><button onclick="hideAdd()" class="w-full mt-4 bg-gray-900 text-white py-3 rounded-full">إغلاق</button></div></div>
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:end;justify-content:center;z-index:50"><div style="background:white;width:100%;max-width:480px;border-radius:32px 32px 0 0;padding:16px;max-height:70vh;overflow:auto"><input id="search" oninput="filterFoods()" placeholder="ابحث..." style="width:100%;background:#FFF9F0;border-radius:999px;padding:12px 16px;outline:none;margin-bottom:12px"><div id="foodList" style="display:flex;flex-direction:column;gap:8px"></div><button onclick="hideAdd()" style="width:100%;margin-top:16px;background:#111;color:white;padding:12px;border-radius:999px">إغلاق</button></div></div>
   `;
 }
-let tmpGender=\'male\';
-function setTmp(k,v){ tmpGender=v; document.getElementById(\'b-male\').className=v===\'male\'?\'p-3 rounded-2xl font-bold bg-gray-900 text-white\':\'p-3 rounded-2xl font-bold bg-[#FFF9F0]\'; document.getElementById(\'b-female\').className=v===\'female\'?\'p-3 rounded-2xl font-bold bg-gray-900 text-white\':\'p-3 rounded-2xl font-bold bg-[#FFF9F0]\'; }
+function setGender(v){ tmpGender=v; document.getElementById(\'b-male\').style.background=v===\'male\'?\'#111\':\'#FFF9F0\'; document.getElementById(\'b-male\').style.color=v===\'male\'?\'white\':\'black\'; document.getElementById(\'b-female\').style.background=v===\'female\'?\'#111\':\'#FFF9F0\'; document.getElementById(\'b-female\').style.color=v===\'female\'?\'white\':\'black\'; }
 function start(){
   profile={gender:tmpGender, age:+document.getElementById(\'age\').value, height:+document.getElementById(\'height\').value, weight:+document.getElementById(\'weight\').value, activity:+document.getElementById(\'activity\').value, goal:document.getElementById(\'goal\').value};
   localStorage.setItem(\'rashik_profile\', JSON.stringify(profile)); render();
 }
-function showAdd(){
-  document.getElementById(\'modal\').classList.remove(\'hidden\');
-  filterFoods();
-}
-function hideAdd(){ document.getElementById(\'modal\').classList.add(\'hidden\'); }
+function showAdd(){ document.getElementById(\'modal\').style.display=\'flex\'; filterFoods(); }
+function hideAdd(){ document.getElementById(\'modal\').style.display=\'none\'; }
 function filterFoods(){
   const q=(document.getElementById(\'search\')?.value||\'\').trim();
   const list=document.getElementById(\'foodList\');
   const filtered=FOODS.filter(f=>f.name.includes(q));
-  list.innerHTML=filtered.map(f=>`<button onclick=\'addFood(${JSON.stringify(f).replace(/\'/g,"&#39;")})\' class="w-full flex justify-between items-center p-3 bg-[#FFF9F0] rounded-2xl"><span class="font-bold">${f.name}</span><span class="text-xs bg-white px-3 py-1 rounded-full">${f.cal} سعرة</span></button>`).join(\'\');
+  list.innerHTML=filtered.map((f,i)=> `<button onclick="addFood(${FOODS.indexOf(f)})" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px;background:#FFF9F0;border-radius:16px"><span style="font-weight:bold">${f.name}</span><span style="font-size:12px;background:white;padding:4px 10px;border-radius:999px">${f.cal} سعرة</span></button>`).join(\'\');
 }
-function addFood(f){ logs.meals[activeMeal].push(f); save(); hideAdd(); }
+function addFood(idx){ logs.meals[activeMeal].push(FOODS[idx]); save(); hideAdd(); }
+function removeFood(i){ logs.meals[activeMeal].splice(i,1); save(); }
 render();
 </script>
 </body>
