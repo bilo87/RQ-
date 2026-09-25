@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RASHIK - رشيق</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>body{font-family:\'Tajawal\',sans-serif;background:#FFF9F0} .card{border-radius:20px}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const FOODS = [
+  {id:1,name:"صدر دجاج",cal:165,protein:31,carbs:0,fat:3.6,gi:0},
+  {id:2,name:"أرز أبيض مسلوق",cal:130,protein:2.4,carbs:28,fat:0.2,gi:72},
+  {id:3,name:"بيض",cal:143,protein:12.5,carbs:1.1,fat:9.5,gi:0},
+  {id:4,name:"شوفان",cal:389,protein:16.9,carbs:66,fat:6.9,gi:55},
+  {id:5,name:"تونة",cal:116,protein:25.5,carbs:0,fat:0.8,gi:0},
+  {id:6,name:"موز",cal:89,protein:1.1,carbs:23,fat:0.3,gi:51},
+  {id:7,name:"لبن زبادي",cal:59,protein:3.5,carbs:5,fat:3.3,gi:35},
+  {id:8,name:"خبز بر",cal:247,protein:13,carbs:41,fat:4,gi:74},
+];
+function App(){
+  const [profile,setProfile] = useState(()=> JSON.parse(localStorage.getItem(\'rashik_profile\')||\'null\'));
+  const [logs,setLogs] = useState(()=> JSON.parse(localStorage.getItem(\'rashik_logs\')||\'{"water":0,"steps":0,"meals":{"breakfast":[],"lunch":[],"dinner":[],"snacks":[]}}\'));
+  const [activeMeal,setActiveMeal]=useState(\'breakfast\');
+  const [showAdd,setShowAdd]=useState(false);
+  useEffect(()=> localStorage.setItem(\'rashik_logs\',JSON.stringify(logs)),[logs]);
+  const calcTargets = () => {
+    if(!profile) return {cal:2200,protein:150,carbs:250,fat:70};
+    let bmr = profile.gender===\'male\' ? 10*profile.weight+6.25*profile.height-5*profile.age+5 : 10*profile.weight+6.25*profile.height-5*profile.age-161;
+    let tdee = bmr * profile.activity;
+    let cal = profile.goal===\'deficit\'? tdee*0.8 : profile.goal===\'bulk\'? tdee*1.12 : tdee;
+    let protein = profile.weight * 2;
+    let fat = (cal*0.25)/9;
+    let carbs = (cal - protein*4 - fat*9)/4;
+    return {cal:Math.round(cal),protein:Math.round(protein),carbs:Math.round(carbs),fat:Math.round(fat)};
+  }
+  const targets = calcTargets();
+  const allFoods = [...logs.meals.breakfast,...logs.meals.lunch,...logs.meals.dinner,...logs.meals.snacks];
+  const totals = allFoods.reduce((a,b)=>({cal:a.cal+b.cal, protein:a.protein+b.protein, carbs:a.carbs+b.carbs, fat:a.fat+b.fat}),{cal:0,protein:0,carbs:0,fat:0});
+  const mealLabels = {breakfast:\'الإفطار\',lunch:\'الغداء\',dinner:\'العشاء\',snacks:\'وجبات خفيفة\'};
+  if(!profile) return <Onboarding onComplete={(p)=>{setProfile(p); localStorage.setItem(\'rashik_profile\',JSON.stringify(p))}} />
+  return (
+    <div className="min-h-screen pb-20">
+      <div className="bg-white/80 backdrop-blur sticky top-0 z-10 border-b p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-extrabold">رَشِيقْ <span className="text-emerald-500 text-sm">RASHIK</span></h1>
+        <div className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">● يعمل بدون انترنت</div>
+      </div>
+      <div className="max-w-[480px] mx-auto p-4 space-y-4">
+        <div className="card bg-white p-5 shadow-sm flex items-center gap-5">
+          <div className="relative w-28 h-28">
+            <svg className="w-28 h-28 -rotate-90"><circle cx="56" cy="56" r="48" stroke="#FFF1E0" strokeWidth="10" fill="none"/><circle cx="56" cy="56" r="48" stroke="#10B981" strokeWidth="10" fill="none" strokeDasharray={2*Math.PI*48} strokeDashoffset={2*Math.PI*48*(1-Math.min(totals.cal/targets.cal,1))} strokeLinecap="round"/></svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-2xl font-black">{totals.cal}</span><span className="text-xs text-gray-500">/ {targets.cal}</span></div>
+          </div>
+          <div className="flex-1 space-y-2">
+            <MacroBar label="بروتين" value={totals.protein} target={targets.protein} color="bg-sky-500"/>
+            <MacroBar label="كارب" value={totals.carbs} target={targets.carbs} color="bg-orange-400"/>
+            <MacroBar label="دهون" value={totals.fat} target={targets.fat} color="bg-rose-400"/>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="card bg-sky-500 text-white p-4">
+            <p className="text-sm opacity-80">المياه</p><p className="text-2xl font-bold">{(logs.water/1000).toFixed(1)} / 2.5 لتر</p>
+            <div className="bg-white/30 h-2 rounded-full mt-2"><div className="bg-white h-2 rounded-full" style={{width:Math.min(logs.water/2500*100,100)+\'%\'}}></div></div>
+            <button onClick={()=>setLogs({...logs,water:logs.water+250})} className="mt-3 bg-white text-sky-600 rounded-full px-4 py-1 text-sm font-bold w-full">+ 250 مل</button>
+          </div>
+          <div className="card bg-orange-400 text-white p-4">
+            <p className="text-sm opacity-80">الخطوات</p><p className="text-2xl font-bold">{logs.steps} / 10000</p>
+            <div className="bg-white/30 h-2 rounded-full mt-2"><div className="bg-white h-2 rounded-full" style={{width:Math.min(logs.steps/10000*100,100)+\'%\'}}></div></div>
+            <button onClick={()=>setLogs({...logs,steps:logs.steps+500})} className="mt-3 bg-white text-orange-500 rounded-full px-4 py-1 text-sm font-bold w-full">+ 500 خطوة</button>
+          </div>
+        </div>
+        <div className="card bg-white shadow-sm overflow-hidden">
+          <div className="h-36 bg-gradient-to-br from-orange-100 via-amber-50 to-emerald-50 relative flex items-end p-4">
+            <img src={activeMeal===\'breakfast\'?"https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600": activeMeal===\'lunch\'?"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600": activeMeal===\'dinner\'?"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600":"https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=600"} className="absolute inset-0 w-full h-full object-cover opacity-60"/>
+            <h2 className="relative text-2xl font-black text-gray-900 bg-white/80 backdrop-blur px-4 py-2 rounded-2xl">{mealLabels[activeMeal]}</h2>
+          </div>
+          <div className="flex gap-2 p-3 overflow-x-auto">
+            {Object.keys(mealLabels).map(k=>(
+              <button key={k} onClick={()=>setActiveMeal(k)} className={activeMeal===k?"bg-gray-900 text-white px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap":"bg-[#FFF9F0] px-5 py-2 rounded-full text-sm whitespace-nowrap"}>{mealLabels[k]}</button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-2 px-3 pb-3">
+            <VerticalFact value={logs.meals[activeMeal].reduce((a,b)=>a+b.cal,0)} label="سعرة" color="#10B981"/>
+            <VerticalFact value={logs.meals[activeMeal].reduce((a,b)=>a+b.protein,0).toFixed(1)} label="بروتين" color="#0EA5E9"/>
+            <VerticalFact value={logs.meals[activeMeal].reduce((a,b)=>a+b.carbs,0).toFixed(1)} label="كارب" color="#F97316"/>
+            <VerticalFact value={logs.meals[activeMeal].reduce((a,b)=>a+b.fat,0).toFixed(1)} label="دهون" color="#EC4899"/>
+          </div>
+          <div className="px-4 pb-4">
+            <div className="flex justify-between items-center mb-3"><h3 className="font-bold">المكونات • {logs.meals[activeMeal].length}</h3>
+              <button onClick={()=>setShowAdd(true)} className="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold">+ إضافة طعام</button>
+            </div>
+            <div className="space-y-2">
+              {logs.meals[activeMeal].length===0 && <p className="text-center text-gray-400 py-6">لا يوجد مكونات بعد - اضغط إضافة طعام</p>}
+              {logs.meals[activeMeal].map((f,i)=>(
+                <div key={i} className="flex items-center gap-3 bg-[#FFF9F0] p-3 rounded-[20px]">
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-xl">🍽️</div>
+                  <div className="flex-1"><p className="font-bold text-sm">{f.name}</p><p className="text-xs text-gray-500">100g • {f.cal} سعرة</p></div>
+                  <span className="text-xs bg-white px-2 py-1 rounded-full">{f.protein}P</span>
+                  <button onClick={()=>{const m={...logs.meals}; m[activeMeal]=m[activeMeal].filter((_,idx)=>idx!==i); setLogs({...logs,meals:m})}} className="text-rose-400">✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="card bg-white p-4">
+          <h3 className="font-bold mb-2">الحمل الجلايسيمي للوجبة</h3>
+          {(() => {
+            const gl = logs.meals[activeMeal].reduce((a,b)=>a + (b.gi*b.carbs/100),0);
+            const color = gl<10?"bg-emerald-500":gl<20?"bg-amber-400":"bg-rose-500";
+            const label = gl<10?"منخفض - آمن":gl<20?"متوسط":"مرتفع";
+            return <><div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className={`h-3 ${color}`} style={{width:Math.min(gl*4,100)+\'%\'}}></div></div><p className="text-xs mt-1">GL = {gl.toFixed(1)} • {label}</p></>
+          })()}
+        </div>
+        <button onClick={()=>{localStorage.clear(); location.reload()}} className="w-full text-center text-xs text-gray-400 py-4">إعادة تعيين البيانات</button>
+      </div>
+      {showAdd && <AddFoodModal foods={FOODS} onAdd={(f)=>{const m={...logs.meals}; m[activeMeal]=[...m[activeMeal],f]; setLogs({...logs,meals:m}); setShowAdd(false)}} onClose={()=>setShowAdd(false)} />}
+    </div>
+  )
+}
+function MacroBar({label,value,target,color}){ return <div><div className="flex justify-between text-xs"><span>{label}</span><span>{value.toFixed(0)}/{target}g</span></div><div className="h-2 bg-gray-100 rounded-full"><div className={`h-2 rounded-full ${color}`} style={{width:Math.min(value/target*100,100)+\'%\'}}></div></div></div>}
+function VerticalFact({value,label,color}){ return <div className="bg-[#FFF9F0] rounded-2xl p-3 text-center border-r-4" style={{borderColor:color}}><p className="text-xl font-black">{value}</p><p className="text-[11px] text-gray-500">{label}</p></div>}
+function AddFoodModal({foods,onAdd,onClose}){
+  const [q,setQ]=useState(\'\');
+  const filtered = foods.filter(f=>f.name.includes(q));
+  return <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50"><div className="bg-white w-full max-w-[480px] rounded-t-[32px] p-4 max-h-[80vh] overflow-auto"><div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4"></div><input autoFocus placeholder="ابحث عن طعام..." value={q} onChange={e=>setQ(e.target.value)} className="w-full bg-[#FFF9F0] rounded-full px-4 py-3 outline-none mb-3"/><div className="space-y-2">{filtered.map(f=><button key={f.id} onClick={()=>onAdd(f)} className="w-full flex justify-between items-center p-3 bg-[#FFF9F0] rounded-2xl"><span className="font-bold">{f.name}</span><span className="text-xs bg-white px-3 py-1 rounded-full">{f.cal} سعرة</span></button>)}</div><button onClick={onClose} className="w-full mt-4 bg-gray-900 text-white py-3 rounded-full">إغلاق</button></div></div>
+}
+function Onboarding({onComplete}){
+  const [s,setS]=useState({gender:\'male\',age:25,height:175,weight:75,activity:1.55,goal:\'maintenance\'});
+  return <div className="min-h-screen bg-[#FFF9F0] flex items-center justify-center p-4"><div className="bg-white rounded-[32px] p-6 w-full max-w-md shadow-sm"><h1 className="text-3xl font-black text-center">مرحباً في رَشِيقْ</h1><p className="text-center text-gray-500 text-sm mb-6">معالج الإعداد الأيضي الذكي</p>
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-2"><button onClick={()=>setS({...s,gender:\'male\'})} className={s.gender===\'male\'?"bg-gray-900 text-white p-3 rounded-2xl":"bg-[#FFF9F0] p-3 rounded-2xl"}>ذكر</button><button onClick={()=>setS({...s,gender:\'female\'})} className={s.gender===\'female\'?"bg-gray-900 text-white p-3 rounded-2xl":"bg-[#FFF9F0] p-3 rounded-2xl"}>أنثى</button></div>
+    <div className="grid grid-cols-3 gap-2"><Field label="العمر" value={s.age} onChange={v=>setS({...s,age:v})}/><Field label="الطول" value={s.height} onChange={v=>setS({...s,height:v})}/><Field label="الوزن" value={s.weight} onChange={v=>setS({...s,weight:v})}/></div>
+    <select value={s.activity} onChange={e=>setS({...s,activity:parseFloat(e.target.value)})} className="w-full bg-[#FFF9F0] p-3 rounded-2xl"><option value={1.2}>خامل</option><option value={1.375}>نشاط خفيف</option><option value={1.55}>نشاط متوسط</option><option value={1.725}>نشط جداً</option></select>
+    <select value={s.goal} onChange={e=>setS({...s,goal:e.target.value})} className="w-full bg-[#FFF9F0] p-3 rounded-2xl"><option value="deficit">خسارة دهون -15%</option><option value="maintenance">تثبيت الوزن</option><option value="bulk">تضخيم +12%</option></select>
+    <button onClick={()=>onComplete(s)} className="w-full bg-emerald-500 text-white py-4 rounded-full font-bold text-lg">ابدأ رحلتك الآن →</button>
+  </div></div></div>
+}
+function Field({label,value,onChange}){ return <div className="bg-[#FFF9F0] p-3 rounded-2xl text-center"><p className="text-xs text-gray-500">{label}</p><input type="number" value={value} onChange={e=>onChange(parseFloat(e.target.value)||0)} className="w-full bg-transparent text-center font-black text-lg outline-none"/></div>}
+ReactDOM.createRoot(document.getElementById(\'root\')).render(<App/>);
+</script>
+</body>
+</html>
